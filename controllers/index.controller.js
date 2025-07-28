@@ -1,11 +1,13 @@
+
 const { Product } = require('../models/product.model.js');
+const cloudinary = require('../config/cloudinary'); 
 
 const getDummyData = (req, res) => {
     return res.status(200).json({
         messaage: "berhasil",
         data: "OK"
-    })
-}
+    });
+};
 
 const createProduct = async (req, res) => {
     try {
@@ -15,7 +17,8 @@ const createProduct = async (req, res) => {
 
         const uploadStream = cloudinary.uploader.upload_stream({ resource_type: 'image' }, async (error, result) => {
             if (error) {
-                return res.status(500).json({ message: 'Gagal mengunggah gambar' });
+                console.error('Cloudinary Upload Error:', error);
+                return res.status(500).json({ message: 'Gagal mengunggah gambar ke Cloudinary' });
             }
 
             const newProduct = new Product({
@@ -28,10 +31,11 @@ const createProduct = async (req, res) => {
         });
 
         uploadStream.end(req.file.buffer);
+
     } catch (err) {
-        res.status(500).json({ message: 'Error pada server', error: err });
+        console.error('Server Error:', err);
+        res.status(500).json({ message: 'Terjadi kesalahan pada server', error: err.message });
     }
 };
 
-
-module.exports = {getDummyData, createProduct}
+module.exports = { getDummyData, createProduct };
