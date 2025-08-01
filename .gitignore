@@ -1,1 +1,5 @@
 /.env
+
+# Mengabaikan file environment
+.env
+.env.*

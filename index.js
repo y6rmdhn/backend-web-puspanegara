@@ -9,9 +9,9 @@ const { MONGO_URL, API_PORT } = process.env
 const app = express();
 const PORT = API_PORT || 3000;
 
-app.use('/api', router);
-app.use(express.json())
 app.use(cors());
+app.use(express.json())
+app.use('/api', router);
 
 mongoose.connect(MONGO_URL)
   .then(() => {
