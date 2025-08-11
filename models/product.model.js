@@ -26,6 +26,10 @@ const productSchema = new mongoose.Schema({
         type: String, 
         required: true 
     },
+    no_wa: {
+        type: String, 
+        required: true
+    },
     publicId: { type: String, required: true }
 }, { 
     timestamps: true 

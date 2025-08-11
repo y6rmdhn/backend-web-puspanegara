@@ -13,45 +13,51 @@ cloudinary.config({
 
 // CRUD operations for Product
 const createProduct = async (req, res) => {
-  let publicId = null;
-  try {
-    const { name, description, price, stock, category } = req.body;
-    if (!name || !description || !price) {
-      return res.status(400).json({ message: 'Nama, deskripsi, dan harga wajib diisi.' });
-    }
-    if (!req.file) {
-      return res.status(400).json({ message: 'Foto produk wajib diunggah.' });
-    }
-    const b64 = Buffer.from(req.file.buffer).toString("base64");
-    let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-    const result = await cloudinary.uploader.upload(dataURI, {
-      resource_type: "auto",
-      folder: "products",
-    });
-    
-    const imageUrl = result.secure_url;
-    publicId = result.public_id; // publicId dari Cloudinary
+  let publicId = null;
+  try {
+    // <-- UBAH DI SINI: Ambil 'no_wa' dari body
+    const { name, description, price, stock, category, no_wa } = req.body;
 
-    const newProduct = new Product({
-      name,
-      description,
-      price,
-      stock,
-      category,
-      imageUrl,
-      publicId, // <-- Simpan publicId ke database
-    });
-    const savedProduct = await newProduct.save();
-    res.status(201).json({
-      message: "Produk berhasil dibuat",
-      data: savedProduct,
-    });
-  } catch (error) {
-    if (publicId) {
-      await cloudinary.uploader.destroy(publicId);
-    }
-    res.status(500).json({ message: 'Terjadi kesalahan pada server', error: error.message });
-  }
+    // <-- UBAH DI SINI: Tambahkan validasi untuk 'no_wa'
+    if (!name || !description || !price || !no_wa) {
+      return res.status(400).json({ message: 'Nama, deskripsi, harga, dan No. WA wajib diisi.' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ message: 'Foto produk wajib diunggah.' });
+    }
+    
+    const b64 = Buffer.from(req.file.buffer).toString("base64");
+    let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+    const result = await cloudinary.uploader.upload(dataURI, {
+      resource_type: "auto",
+      folder: "products",
+    });
+    
+    const imageUrl = result.secure_url;
+    publicId = result.public_id;
+
+    const newProduct = new Product({
+      name,
+      description,
+      price,
+      stock,
+      category,
+      imageUrl,
+      publicId,
+      no_wa,
+    });
+
+    const savedProduct = await newProduct.save();
+    res.status(201).json({
+      message: "Produk berhasil dibuat",
+      data: savedProduct,
+    });
+  } catch (error) {
+    if (publicId) {
+      await cloudinary.uploader.destroy(publicId);
+    }
+    res.status(500).json({ message: 'Terjadi kesalahan pada server', error: error.message });
+  }
 };
 
 const getAllProducts = async (req, res) => {
@@ -85,7 +91,8 @@ const getProductById = async (req, res) => {
 // ** FUNGSI BARU UNTUK UPDATE **
 const updateProduct = async (req, res) => {
   const { id } = req.params;
-  const { name, description, price, stock, category } = req.body;
+  // <-- UBAH DI SINI: Ambil 'no_wa' dari body
+  const { name, description, price, stock, category, no_wa } = req.body;
   let newPublicId = null;
 
   try {
@@ -111,6 +118,7 @@ const updateProduct = async (req, res) => {
     product.price = price || product.price;
     product.stock = stock !== undefined ? stock : product.stock;
     product.category = category || product.category;
+    product.no_wa = no_wa || product.no_wa; // <-- UBAH DI SINI: Perbarui 'no_wa'
 
     const updatedProduct = await product.save();
 
