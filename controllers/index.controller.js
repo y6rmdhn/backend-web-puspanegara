@@ -61,15 +61,37 @@ const createProduct = async (req, res) => {
 };
 
 const getAllProducts = async (req, res) => {
-  try {
-    const products = await Product.find({});
-    res.status(200).json({
-      message: "Berhasil mendapatkan semua produk",
-      data: products,
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Terjadi kesalahan pada server', error: error.message });
-  }
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 8;
+    const search = req.query.search || "";
+
+    const skip = (page - 1) * limit;
+
+    const queryFilter = {
+      name: { $regex: search, $options: "i" },
+    };
+
+    const totalProducts = await Product.countDocuments(queryFilter);
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    const products = await Product.find(queryFilter)
+      .populate("category", "name")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({
+      message: "Success get all products",
+      data: {
+        data: products,
+        currentPage: page,
+        totalPages: totalPages,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 const getProductById = async (req, res) => {
