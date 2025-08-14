@@ -81,6 +81,7 @@ const getAllProducts = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
+    // Kirim response dengan struktur paginasi
     res.status(200).json({
       message: "Success get all products",
       data: {
