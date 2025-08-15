@@ -65,35 +65,41 @@ const getAllProducts = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 8;
     const search = req.query.search || "";
+    const category = req.query.category || "semua";
+    const sort = req.query.sort || "terbaru";
 
     const skip = (page - 1) * limit;
 
+    // Buat query filter
     const queryFilter = {
       name: { $regex: search, $options: "i" },
+      ...(category !== "semua" && { category }),
     };
+
+    // Tentukan urutan sort
+    let sortOption = { createdAt: -1 }; // default terbaru
+    if (sort === "termurah") sortOption = { price: 1 };
+    if (sort === "termahal") sortOption = { price: -1 };
 
     const totalProducts = await Product.countDocuments(queryFilter);
     const totalPages = Math.ceil(totalProducts / limit);
 
     const products = await Product.find(queryFilter)
-      .populate("category", "name")
-      .sort({ createdAt: -1 })
+      .sort(sortOption)
       .skip(skip)
       .limit(limit);
 
-    // Kirim response dengan struktur paginasi
     res.status(200).json({
-      message: "Success get all products",
-      data: {
-        data: products,
-        currentPage: page,
-        totalPages: totalPages,
-      },
+      data: products,
+      currentPage: page,
+      totalPages: totalPages,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
+
 
 const getProductById = async (req, res) => {
   try {
